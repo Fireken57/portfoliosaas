@@ -25,8 +25,8 @@ export default function AlertsPage() {
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     symbol: '',
-    type: 'PRICE' as const,
-    condition: 'ABOVE' as const,
+    type: 'PRICE' as 'PRICE' | 'VOLUME' | 'TECHNICAL',
+    condition: 'ABOVE' as 'ABOVE' | 'BELOW' | 'EQUALS',
     value: '',
     message: '',
   });
