@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Alert } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
 
-export default function ResetPasswordTokenPage({
+export default function Page({
   params,
 }: {
   params: { token: string };
