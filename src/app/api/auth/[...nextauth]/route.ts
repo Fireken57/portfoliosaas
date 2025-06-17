@@ -1,11 +1,14 @@
 import NextAuth from "next-auth"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
-import { prisma } from "@/lib/prisma"
+import { PrismaClient } from "@prisma/client"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 
+// Create a separate Prisma client for NextAuth without extensions
+const prismaAuth = new PrismaClient()
+
 const authOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prismaAuth),
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -22,7 +25,7 @@ const authOptions = {
             throw new Error('Email et mot de passe requis')
           }
 
-          const user = await prisma.user.findUnique({
+          const user = await prismaAuth.user.findUnique({
             where: {
               email: credentials.email as string
             }
