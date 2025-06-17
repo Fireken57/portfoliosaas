@@ -233,7 +233,7 @@ export default function AlertsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card>
           <DataTable
-            columns={columns}
+            columns={columns({ onDelete: handleDelete, onSymbolClick: handleSymbolClick })}
             data={alerts}
             loading={loading}
             onDelete={handleDelete}
