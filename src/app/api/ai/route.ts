@@ -58,7 +58,15 @@ async function handleSuggestions(positions: any[]) {
     model: 'gpt-4',
   });
 
-  return NextResponse.json(JSON.parse(completion.choices[0].message.content));
+  const content = completion.choices[0]?.message?.content;
+  if (!content) {
+    return NextResponse.json(
+      { error: 'No response from AI service' },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json(JSON.parse(content));
 }
 
 async function handleAnalysis(positions: any[], trades: any[]) {
@@ -76,7 +84,15 @@ async function handleAnalysis(positions: any[], trades: any[]) {
     model: 'gpt-4',
   });
 
-  return NextResponse.json(JSON.parse(completion.choices[0].message.content));
+  const content = completion.choices[0]?.message?.content;
+  if (!content) {
+    return NextResponse.json(
+      { error: 'No response from AI service' },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json(JSON.parse(content));
 }
 
 async function handleAlerts(positions: any[]) {
@@ -94,7 +110,15 @@ async function handleAlerts(positions: any[]) {
     model: 'gpt-4',
   });
 
-  return NextResponse.json(JSON.parse(completion.choices[0].message.content));
+  const content = completion.choices[0]?.message?.content;
+  if (!content) {
+    return NextResponse.json(
+      { error: 'No response from AI service' },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json(JSON.parse(content));
 }
 
 async function handleDiversification(positions: any[]) {
@@ -112,7 +136,15 @@ async function handleDiversification(positions: any[]) {
     model: 'gpt-4',
   });
 
-  return NextResponse.json(JSON.parse(completion.choices[0].message.content));
+  const content = completion.choices[0]?.message?.content;
+  if (!content) {
+    return NextResponse.json(
+      { error: 'No response from AI service' },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json(JSON.parse(content));
 }
 
 async function handlePerformance(trades: any[]) {
@@ -129,5 +161,13 @@ async function handlePerformance(trades: any[]) {
     model: 'gpt-4',
   });
 
-  return NextResponse.json(JSON.parse(completion.choices[0].message.content));
+  const content = completion.choices[0]?.message?.content;
+  if (!content) {
+    return NextResponse.json(
+      { error: 'No response from AI service' },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json(JSON.parse(content));
 } 
