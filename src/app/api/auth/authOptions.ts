@@ -1,11 +1,9 @@
-import NextAuth from "next-auth"
-import { PrismaAdapter } from "@next-auth/prisma-adapter"
-import { prisma } from "@/lib/prisma"
-import CredentialsProvider from "next-auth/providers/credentials"
-import bcrypt from "bcryptjs"
-import { authOptions } from "./authOptions"
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { prisma } from "@/lib/prisma";
+import CredentialsProvider from "next-auth/providers/credentials";
+bcrypt from "bcryptjs";
 
-const authOptions = {
+export const authOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
@@ -16,47 +14,31 @@ const authOptions = {
       },
       async authorize(credentials) {
         try {
-          console.log("Tentative de connexion avec:", credentials?.email)
-          
           if (!credentials?.email || !credentials?.password) {
-            console.log("Email ou mot de passe manquant")
             throw new Error('Email et mot de passe requis')
           }
-
           const user = await prisma.user.findUnique({
-            where: {
-              email: credentials.email as string
-            }
+            where: { email: credentials.email as string }
           })
-
           if (!user) {
-            console.log("Utilisateur non trouvé")
             throw new Error('Email non trouvé')
           }
-
           if (!user.password) {
-            console.log("Utilisateur sans mot de passe")
             throw new Error('Compte invalide')
           }
-
           const isCorrectPassword = await bcrypt.compare(
             credentials.password as string,
             user.password
           )
-
           if (!isCorrectPassword) {
-            console.log("Mot de passe incorrect")
             throw new Error('Mot de passe incorrect')
           }
-
-          console.log("Connexion réussie pour:", user.email)
           return {
             id: user.id,
             email: user.email,
             name: user.name,
           }
         } catch (error) {
-          console.error("Erreur d'authentification:", error)
           throw error
         }
       }
@@ -64,7 +46,7 @@ const authOptions = {
   ],
   session: {
     strategy: "jwt" as const,
-    maxAge: 30 * 24 * 60 * 60, // 30 jours
+    maxAge: 30 * 24 * 60 * 60,
   },
   secret: process.env.NEXTAUTH_SECRET,
   debug: true,
@@ -73,20 +55,17 @@ const authOptions = {
     error: "/login",
   },
   callbacks: {
-    async jwt({ token, user }: { token: any; user?: any }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id
       }
       return token
     },
-    async session({ session, token }: { session: any; token: any }) {
+    async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string
       }
       return session
     }
   }
-}
-
-const handler = NextAuth(authOptions)
-export { handler as GET, handler as POST }
+} 
