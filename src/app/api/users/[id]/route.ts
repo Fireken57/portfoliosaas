@@ -2,13 +2,11 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 // GET /api/users/[id] - Récupérer un utilisateur spécifique
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: Request, context: any) {
+  const id = context?.params?.id;
   try {
     const user = await prisma.user.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         name: true,
@@ -36,16 +34,14 @@ export async function GET(
 }
 
 // PATCH /api/users/[id] - Mettre à jour un utilisateur
-export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(request: Request, context: any) {
+  const id = context?.params?.id;
   try {
     const body = await request.json()
     const { name, email } = body
 
     const user = await prisma.user.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name,
         email,
@@ -69,13 +65,11 @@ export async function PATCH(
 }
 
 // DELETE /api/users/[id] - Supprimer un utilisateur
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: Request, context: any) {
+  const id = context?.params?.id;
   try {
     await prisma.user.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json(
