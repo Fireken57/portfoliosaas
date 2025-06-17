@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +18,7 @@ import { Plus, Bell } from 'lucide-react';
 
 export default function AlertsPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,10 +83,16 @@ export default function AlertsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!session?.user?.id) {
+      setError('User not authenticated');
+      return;
+    }
+    
     try {
       const newAlert = await alertService.createAlert({
         ...formData,
         value: parseFloat(formData.value),
+        userId: session.user.id,
       });
       setAlerts((prev) => [newAlert, ...prev]);
       setShowForm(false);
