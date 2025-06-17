@@ -2,7 +2,7 @@ import { Alert } from '../types';
 import { MarketService } from './market';
 import { IndicatorService, IndicatorConfig } from './indicators';
 import { sendAlertEmail } from '@/lib/email';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 export class AlertService {
   private marketService: MarketService;
