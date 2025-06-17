@@ -68,7 +68,11 @@ export default function AlertsPage() {
 
   const loadMarketData = async (symbol: string) => {
     try {
-      const data = await marketService.getHistoricalData(symbol);
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - 30); // Get last 30 days of data
+      
+      const data = await marketService.getHistoricalData(symbol, startDate, endDate);
       setMarketData(data);
     } catch (err) {
       console.error('Error loading market data:', err);
