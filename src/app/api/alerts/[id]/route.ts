@@ -3,7 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(request: NextRequest, { params }: { params: Record<string, string> }) {
+export async function GET(request: NextRequest, context: any) {
+  const id = context?.params?.id;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest, { params }: { params: Record<str
 
     const alert = await prisma.alert.findFirst({
       where: {
-        id: params["id"],
+        id,
         user: {
           email: session.user.email,
         },
@@ -30,7 +31,8 @@ export async function GET(request: NextRequest, { params }: { params: Record<str
   }
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: Record<string, string> }) {
+export async function PATCH(request: NextRequest, context: any) {
+  const id = context?.params?.id;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
@@ -42,7 +44,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Record<s
 
     const alert = await prisma.alert.findFirst({
       where: {
-        id: params["id"],
+        id,
         user: {
           email: session.user.email,
         },
@@ -55,7 +57,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Record<s
 
     const updatedAlert = await prisma.alert.update({
       where: {
-        id: params["id"],
+        id,
       },
       data: {
         type,
@@ -76,7 +78,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Record<s
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: Record<string, string> }) {
+export async function DELETE(request: NextRequest, context: any) {
+  const id = context?.params?.id;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
@@ -85,7 +88,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Record<
 
     const alert = await prisma.alert.findFirst({
       where: {
-        id: params["id"],
+        id,
         user: {
           email: session.user.email,
         },
@@ -98,7 +101,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Record<
 
     await prisma.alert.delete({
       where: {
-        id: params["id"],
+        id,
       },
     });
 
