@@ -1,5 +1,5 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { Trade } from '@/features/trading/types';
+import { Trade } from '@/features/trading/types/index';
 import { format } from 'date-fns';
 
 export const columns: ColumnDef<Trade>[] = [
