@@ -101,14 +101,12 @@ export default function TradesPage() {
       {/* Date Range Picker */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <DatePicker
-          selected={startDate}
-          onSelect={setStartDate}
-          placeholder="Start Date"
+          date={startDate ?? undefined}
+          onSelect={date => setStartDate(date ?? null)}
         />
         <DatePicker
-          selected={endDate}
-          onSelect={setEndDate}
-          placeholder="End Date"
+          date={endDate ?? undefined}
+          onSelect={date => setEndDate(date ?? null)}
         />
       </div>
 
