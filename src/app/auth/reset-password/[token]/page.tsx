@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
-import type { PageProps } from 'next';
 
 export default function Page({ params }: any) {
   const [password, setPassword] = useState('');
