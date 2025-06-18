@@ -100,10 +100,19 @@ export class AlertService {
       const activeAlerts = alerts.filter(alert => !alert.triggered);
 
       for (const alert of activeAlerts) {
-        const marketData = await this.marketService.getLatestPrice(alert.symbol);
-        if (!marketData) continue;
+        const marketDataArr = await this.marketService.getMarketData(alert.symbol);
+        const latestMarketData = marketDataArr[marketDataArr.length - 1];
+        if (!latestMarketData) continue;
 
-        const triggered = await this.evaluateAlert(alert, marketData.price);
+        let triggered = false;
+        if (alert.type === 'PRICE') {
+          triggered = await this.evaluatePriceAlert(alert, latestMarketData.price);
+        } else if (alert.type === 'VOLUME') {
+          triggered = await this.evaluateVolumeAlert(alert, latestMarketData);
+        } else if (alert.type === 'TECHNICAL') {
+          triggered = await this.evaluateTechnicalAlert(alert, latestMarketData);
+        }
+
         if (triggered) {
           const updatedAlert = await this.updateAlert(alert.id, { triggered: true });
           
@@ -118,9 +127,9 @@ export class AlertService {
             await sendAlertEmail(
               user.email,
               updatedAlert,
-              marketData.price,
-              marketData.change,
-              marketData.changePercent
+              latestMarketData.price,
+              latestMarketData.change,
+              latestMarketData.changePercent
             );
           }
 
@@ -132,7 +141,7 @@ export class AlertService {
     }
   }
 
-  private async evaluateAlert(alert: Alert, currentPrice: number): Promise<boolean> {
+  private async evaluateAlert(alert: Alert, currentPrice: number | any): Promise<boolean> {
     switch (alert.type) {
       case 'PRICE':
         return this.evaluatePriceAlert(alert, currentPrice);
@@ -158,13 +167,10 @@ export class AlertService {
     }
   }
 
-  private async evaluateVolumeAlert(alert: Alert, currentPrice: number): Promise<boolean> {
-    const marketData = await this.marketService.getLatestPrice(alert.symbol);
+  private async evaluateVolumeAlert(alert: Alert, marketData: any): Promise<boolean> {
     if (!marketData) return false;
-
     const volume = marketData.volume;
     const averageVolume = marketData.averageVolume || volume;
-
     switch (alert.condition) {
       case 'ABOVE':
         return volume > averageVolume * alert.value;
@@ -177,24 +183,22 @@ export class AlertService {
     }
   }
 
-  private async evaluateTechnicalAlert(alert: Alert, currentPrice: number): Promise<boolean> {
-    const historicalData = await this.marketService.getHistoricalData(alert.symbol);
+  private async evaluateTechnicalAlert(alert: Alert, marketData: any): Promise<boolean> {
+    const historicalData = await this.marketService.getMarketData(alert.symbol);
     if (!historicalData || historicalData.length === 0) return false;
-
     const prices = historicalData.map(d => d.price);
+    // Use default values if alert fields are missing
     const config: IndicatorConfig = {
-      type: alert.indicatorType || 'SMA',
-      period: alert.period || 14,
-      signalPeriod: alert.signalPeriod,
-      fastPeriod: alert.fastPeriod,
-      slowPeriod: alert.slowPeriod,
-      stdDev: alert.stdDev,
-      kPeriod: alert.kPeriod,
-      dPeriod: alert.dPeriod,
+      type: (alert as any).indicatorType || 'SMA',
+      period: (alert as any).period || 14,
+      signalPeriod: (alert as any).signalPeriod,
+      fastPeriod: (alert as any).fastPeriod,
+      slowPeriod: (alert as any).slowPeriod,
+      stdDev: (alert as any).stdDev,
+      kPeriod: (alert as any).kPeriod,
+      dPeriod: (alert as any).dPeriod,
     };
-
     const result = this.indicatorService.calculateIndicator(prices, config);
-
     switch (alert.condition) {
       case 'ABOVE':
         return result.value > alert.value;
@@ -202,10 +206,6 @@ export class AlertService {
         return result.value < alert.value;
       case 'EQUALS':
         return Math.abs(result.value - alert.value) < 0.01;
-      case 'CROSSES_ABOVE':
-        return result.value > alert.value && result.signal && result.signal <= alert.value;
-      case 'CROSSES_BELOW':
-        return result.value < alert.value && result.signal && result.signal >= alert.value;
       default:
         return false;
     }
