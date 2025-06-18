@@ -46,7 +46,7 @@ export function Chart({ data, symbol, height = 400, onTimeRangeChange }: ChartPr
         },
       });
 
-      const candleSeriesInstance = chartInstance.addCandlestickSeries({
+      const candleSeriesInstance = (chartInstance as any).addCandlestickSeries({
         upColor: '#22c55e',
         downColor: '#ef4444',
         borderVisible: false,
@@ -54,7 +54,7 @@ export function Chart({ data, symbol, height = 400, onTimeRangeChange }: ChartPr
         wickDownColor: '#ef4444',
       });
 
-      const volumeSeriesInstance = chartInstance.addHistogramSeries({
+      const volumeSeriesInstance = (chartInstance as any).addHistogramSeries({
         color: '#26a69a',
         priceFormat: {
           type: 'volume',
@@ -90,7 +90,7 @@ export function Chart({ data, symbol, height = 400, onTimeRangeChange }: ChartPr
   useEffect(() => {
     if (candleSeries && volumeSeries && data.length > 0) {
       const candleData = data.map(d => ({
-        time: new Date(d.timestamp).getTime() / 1000 as Time,
+        time: new Date(d.time).getTime() / 1000 as Time,
         open: d.open,
         high: d.high,
         low: d.low,
@@ -98,7 +98,7 @@ export function Chart({ data, symbol, height = 400, onTimeRangeChange }: ChartPr
       }));
 
       const volumeData = data.map(d => ({
-        time: new Date(d.timestamp).getTime() / 1000 as Time,
+        time: new Date(d.time).getTime() / 1000 as Time,
         value: d.volume,
         color: d.close >= d.open ? '#22c55e' : '#ef4444',
       }));
