@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     await prisma.watchlist.create({
       data: {
         name: 'My Watchlist',
-        symbols: [],
+        symbols: "",
         userId: user.id,
       },
     });
