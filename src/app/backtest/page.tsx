@@ -68,7 +68,9 @@ export default function BacktestPage() {
       const strategy = {
         name: selectedStrategy.name,
         description: selectedStrategy.description,
-        parameters: selectedStrategy.parameters,
+        parameters: Object.fromEntries(
+          Object.entries(selectedStrategy.parameters).filter(([_, v]) => v !== undefined)
+        ),
         entryRules: (data: any) => {
           // Implémenter la logique d'entrée basée sur la stratégie
           return Math.random() > 0.5;
