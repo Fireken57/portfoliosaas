@@ -134,7 +134,7 @@ export default function StrategiesPage() {
                 <Select
                   value={newStrategy.type}
                   onValueChange={(value) =>
-                    setNewStrategy((prev) => ({ ...prev, type: value }))
+                    setNewStrategy((prev) => ({ ...prev, type: value as "TREND" | "MEAN_REVERSION" | "BREAKOUT" | "CUSTOM" }))
                   }
                 >
                   <SelectTrigger>
