@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 export async function POST(request: Request) {
   try {
     const { positions, trades, apiKey, type } = await request.json();
@@ -16,17 +12,22 @@ export async function POST(request: Request) {
       );
     }
 
+    // Initialize OpenAI only when needed
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
     switch (type) {
       case 'suggestions':
-        return await handleSuggestions(positions);
+        return await handleSuggestions(positions, openai);
       case 'analysis':
-        return await handleAnalysis(positions, trades);
+        return await handleAnalysis(positions, trades, openai);
       case 'alerts':
-        return await handleAlerts(positions);
+        return await handleAlerts(positions, openai);
       case 'diversification':
-        return await handleDiversification(positions);
+        return await handleDiversification(positions, openai);
       case 'performance':
-        return await handlePerformance(trades);
+        return await handlePerformance(trades, openai);
       default:
         return NextResponse.json(
           { error: 'Invalid request type' },
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
   }
 }
 
-async function handleSuggestions(positions: any[]) {
+async function handleSuggestions(positions: any[], openai: OpenAI) {
   const prompt = `Analyze the following portfolio positions and provide investment suggestions:
     ${JSON.stringify(positions, null, 2)}
     
@@ -69,7 +70,7 @@ async function handleSuggestions(positions: any[]) {
   return NextResponse.json(JSON.parse(content));
 }
 
-async function handleAnalysis(positions: any[], trades: any[]) {
+async function handleAnalysis(positions: any[], trades: any[], openai: OpenAI) {
   const prompt = `Analyze the following portfolio:
     Positions: ${JSON.stringify(positions, null, 2)}
     Trades: ${JSON.stringify(trades, null, 2)}
@@ -95,7 +96,7 @@ async function handleAnalysis(positions: any[], trades: any[]) {
   return NextResponse.json(JSON.parse(content));
 }
 
-async function handleAlerts(positions: any[]) {
+async function handleAlerts(positions: any[], openai: OpenAI) {
   const prompt = `Analyze the following positions for potential market alerts:
     ${JSON.stringify(positions, null, 2)}
     
@@ -121,7 +122,7 @@ async function handleAlerts(positions: any[]) {
   return NextResponse.json(JSON.parse(content));
 }
 
-async function handleDiversification(positions: any[]) {
+async function handleDiversification(positions: any[], openai: OpenAI) {
   const prompt = `Analyze the following portfolio for diversification opportunities:
     ${JSON.stringify(positions, null, 2)}
     
@@ -147,7 +148,7 @@ async function handleDiversification(positions: any[]) {
   return NextResponse.json(JSON.parse(content));
 }
 
-async function handlePerformance(trades: any[]) {
+async function handlePerformance(trades: any[], openai: OpenAI) {
   const prompt = `Analyze the following trading history:
     ${JSON.stringify(trades, null, 2)}
     
