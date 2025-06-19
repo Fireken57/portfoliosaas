@@ -21,7 +21,6 @@ export async function GET() {
         image: true,
         createdAt: true,
       },
-      cacheStrategy: { ttl: 60 },
     })
     return NextResponse.json(users)
   } catch (error) {
@@ -101,6 +100,7 @@ export async function POST(request: Request) {
         id: true,
         name: true,
         email: true,
+        image: true,
         createdAt: true,
       },
     })

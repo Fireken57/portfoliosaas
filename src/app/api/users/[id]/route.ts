@@ -21,7 +21,6 @@ export async function GET(request: Request, context: any) {
         image: true,
         createdAt: true,
       },
-      cacheStrategy: { ttl: 60 },
     })
 
     if (!user) {
