@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,17 +10,17 @@ import { Label } from '@/components/ui/label';
 import { Alert as AlertComponent } from '@/components/ui/alert';
 import { Alert, MarketData } from '@/features/trading/types';
 import { DataTable } from '@/components/ui/data-table';
-import { columns } from './columns';
 import { Chart } from '@/components/trading/Chart';
-import { Plus, Bell } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { Plus, Bell, Trash2 } from 'lucide-react';
+import { ClientOnly } from '@/components/ClientOnly';
+import { ColumnDef } from '@tanstack/react-table';
 
 // Disable static generation for this page
 export const dynamic = 'force-dynamic';
 
-export default function AlertsPage() {
+function AlertsContent() {
   const router = useRouter();
-  const { session, status, isClient } = useAuth();
+  const { data: session, status } = useSession();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +38,114 @@ export default function AlertsPage() {
     alertService: any;
     marketService: any;
   } | null>(null);
+
+  const handleDelete = async (id: string) => {
+    if (!services) return;
+    
+    try {
+      await services.alertService.deleteAlert(id);
+      setAlerts((prev) => prev.filter((alert) => alert.id !== id));
+    } catch (err) {
+      setError('Failed to delete alert');
+      console.error(err);
+    }
+  };
+
+  const handleSymbolClick = (symbol: string) => {
+    setSelectedSymbol(symbol);
+  };
+
+  const columns: ColumnDef<Alert>[] = [
+    {
+      accessorKey: 'symbol',
+      header: 'Symbol',
+      cell: ({ row }) => (
+        <Button
+          variant="link"
+          onClick={() => handleSymbolClick(row.original.symbol)}
+          className="p-0 h-auto font-medium"
+        >
+          {row.original.symbol}
+        </Button>
+      ),
+    },
+    {
+      accessorKey: 'type',
+      header: 'Type',
+      cell: ({ row }) => {
+        const type = row.getValue('type') as string;
+        return (
+          <span
+            className={`px-2 py-1 rounded text-sm ${
+              type === 'PRICE'
+                ? 'bg-blue-100 text-blue-800'
+                : type === 'VOLUME'
+                ? 'bg-green-100 text-green-800'
+                : 'bg-purple-100 text-purple-800'
+            }`}
+          >
+            {type}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: 'condition',
+      header: 'Condition',
+      cell: ({ row }) => {
+        const condition = row.getValue('condition') as string;
+        const value = row.getValue('value') as number;
+        return `${condition} ${value}`;
+      },
+    },
+    {
+      accessorKey: 'value',
+      header: 'Value',
+      cell: ({ row }) => row.original.value.toFixed(2),
+    },
+    {
+      accessorKey: 'message',
+      header: 'Message',
+    },
+    {
+      accessorKey: 'triggered',
+      header: 'Status',
+      cell: ({ row }) => {
+        const triggered = row.getValue('triggered') as boolean;
+        return (
+          <span
+            className={`px-2 py-1 rounded text-sm ${
+              triggered
+                ? 'bg-green-100 text-green-800'
+                : 'bg-yellow-100 text-yellow-800'
+            }`}
+          >
+            {triggered ? 'Triggered' : 'Active'}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: 'createdAt',
+      header: 'Created',
+      cell: ({ row }) => {
+        const date = row.getValue('createdAt') as Date;
+        return new Date(date).toLocaleString();
+      },
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => handleDelete(row.original.id)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      ),
+    },
+  ];
 
   useEffect(() => {
     // Dynamically import services to avoid build issues
@@ -59,7 +168,7 @@ export default function AlertsPage() {
   }, []);
 
   useEffect(() => {
-    if (services && isClient && status !== 'loading') {
+    if (services && status !== 'loading') {
       loadAlerts();
       const unsubscribe = services.alertService.subscribe((alert: Alert) => {
         setAlerts((prev) => [alert, ...prev]);
@@ -70,7 +179,7 @@ export default function AlertsPage() {
         services.alertService.stopCheckingAlerts();
       };
     }
-  }, [services, isClient, status]);
+  }, [services, status]);
 
   useEffect(() => {
     if (selectedSymbol && services) {
@@ -137,30 +246,14 @@ export default function AlertsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!services) return;
-    
-    try {
-      await services.alertService.deleteAlert(id);
-      setAlerts((prev) => prev.filter((alert) => alert.id !== id));
-    } catch (err) {
-      setError('Failed to delete alert');
-      console.error(err);
-    }
-  };
-
-  const handleSymbolClick = (symbol: string) => {
-    setSelectedSymbol(symbol);
-  };
-
-  // Show loading state while not on client or session is loading
-  if (!isClient || status === 'loading') {
+  // Show loading state while session is loading
+  if (status === 'loading') {
     return (
       <div className="container mx-auto py-8">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-            <p>Loading...</p>
+            <p>Loading session...</p>
           </div>
         </div>
       </div>
@@ -265,7 +358,7 @@ export default function AlertsPage() {
               </div>
             </div>
             <div>
-              <Label htmlFor="message">Message (optional)</Label>
+              <Label htmlFor="message">Message (Optional)</Label>
               <Input
                 id="message"
                 value={formData.message}
@@ -274,7 +367,8 @@ export default function AlertsPage() {
                 }
               />
             </div>
-            <div className="flex justify-end space-x-2">
+            <div className="flex gap-2">
+              <Button type="submit">Create Alert</Button>
               <Button
                 type="button"
                 variant="outline"
@@ -282,33 +376,79 @@ export default function AlertsPage() {
               >
                 Cancel
               </Button>
-              <Button type="submit">Create Alert</Button>
             </div>
           </form>
         </Card>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card>
-          <DataTable
-            columns={columns({ onDelete: handleDelete, onSymbolClick: handleSymbolClick })}
-            data={alerts}
-            loading={loading}
-            onDelete={handleDelete}
-            onSymbolClick={handleSymbolClick}
-          />
-        </Card>
-
-        {selectedSymbol && (
-          <div className="space-y-4">
-            <Chart
-              data={marketData}
-              symbol={selectedSymbol}
-              height={400}
-            />
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+            <p>Loading alerts...</p>
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Active Alerts</h2>
+              <DataTable columns={columns} data={alerts} />
+            </Card>
+
+            {selectedSymbol && (
+              <Card className="p-6">
+                <h2 className="text-xl font-semibold mb-4">
+                  {selectedSymbol} Price Chart
+                </h2>
+                <Chart data={marketData} symbol={selectedSymbol} />
+              </Card>
+            )}
+          </div>
+
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Market Overview</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {alerts.slice(0, 6).map((alert) => (
+                <div
+                  key={alert.id}
+                  className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50"
+                  onClick={() => handleSymbolClick(alert.symbol)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold">{alert.symbol}</h3>
+                      <p className="text-sm text-gray-600">
+                        {alert.type} {alert.condition} {alert.value}
+                      </p>
+                    </div>
+                    <Bell className="w-4 h-4 text-yellow-500" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
+  );
+}
+
+export default function AlertsPage() {
+  return (
+    <ClientOnly
+      fallback={
+        <div className="container mx-auto py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+              <p>Loading...</p>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <AlertsContent />
+    </ClientOnly>
   );
 } 
