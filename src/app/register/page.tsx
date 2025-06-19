@@ -4,6 +4,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
+
 export default function RegisterPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
