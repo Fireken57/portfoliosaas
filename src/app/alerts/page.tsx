@@ -8,8 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert as AlertComponent } from '@/components/ui/alert';
-import { AlertService } from '@/features/trading/services/alerts';
-import { MarketService } from '@/features/trading/services/market';
 import { Alert, MarketData } from '@/features/trading/types';
 import { DataTable } from '@/components/ui/data-table';
 import { columns } from './columns';
@@ -35,32 +33,57 @@ export default function AlertsPage() {
   });
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
   const [marketData, setMarketData] = useState<MarketData[]>([]);
-
-  const alertService = new AlertService();
-  const marketService = new MarketService();
+  const [services, setServices] = useState<{
+    alertService: any;
+    marketService: any;
+  } | null>(null);
 
   useEffect(() => {
-    loadAlerts();
-    const unsubscribe = alertService.subscribe((alert) => {
-      setAlerts((prev) => [alert, ...prev]);
-    });
-
-    return () => {
-      unsubscribe();
-      alertService.stopCheckingAlerts();
+    // Dynamically import services to avoid build issues
+    const loadServices = async () => {
+      try {
+        const { AlertService } = await import('@/features/trading/services/alerts');
+        const { MarketService } = await import('@/features/trading/services/market');
+        
+        setServices({
+          alertService: new AlertService(),
+          marketService: new MarketService(),
+        });
+      } catch (error) {
+        console.error('Error loading services:', error);
+        setError('Failed to load services');
+      }
     };
+
+    loadServices();
   }, []);
 
   useEffect(() => {
-    if (selectedSymbol) {
+    if (services) {
+      loadAlerts();
+      const unsubscribe = services.alertService.subscribe((alert: Alert) => {
+        setAlerts((prev) => [alert, ...prev]);
+      });
+
+      return () => {
+        unsubscribe();
+        services.alertService.stopCheckingAlerts();
+      };
+    }
+  }, [services]);
+
+  useEffect(() => {
+    if (selectedSymbol && services) {
       loadMarketData(selectedSymbol);
     }
-  }, [selectedSymbol]);
+  }, [selectedSymbol, services]);
 
   const loadAlerts = async () => {
+    if (!services) return;
+    
     try {
       setLoading(true);
-      const data = await alertService.getAlerts();
+      const data = await services.alertService.getAlerts();
       setAlerts(data);
       setError(null);
     } catch (err) {
@@ -72,12 +95,14 @@ export default function AlertsPage() {
   };
 
   const loadMarketData = async (symbol: string) => {
+    if (!services) return;
+    
     try {
       const endDate = new Date();
       const startDate = new Date();
       startDate.setDate(endDate.getDate() - 30); // Get last 30 days of data
       
-      const data = await marketService.getHistoricalData(symbol, startDate, endDate);
+      const data = await services.marketService.getHistoricalData(symbol, startDate, endDate);
       setMarketData(data);
     } catch (err) {
       console.error('Error loading market data:', err);
@@ -86,13 +111,13 @@ export default function AlertsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!session?.user?.id) {
-      setError('User not authenticated');
+    if (!session?.user?.id || !services) {
+      setError('User not authenticated or services not loaded');
       return;
     }
     
     try {
-      const newAlert = await alertService.createAlert({
+      const newAlert = await services.alertService.createAlert({
         ...formData,
         value: parseFloat(formData.value),
         userId: session.user.id,
@@ -113,8 +138,10 @@ export default function AlertsPage() {
   };
 
   const handleDelete = async (id: string) => {
+    if (!services) return;
+    
     try {
-      await alertService.deleteAlert(id);
+      await services.alertService.deleteAlert(id);
       setAlerts((prev) => prev.filter((alert) => alert.id !== id));
     } catch (err) {
       setError('Failed to delete alert');
@@ -125,6 +152,19 @@ export default function AlertsPage() {
   const handleSymbolClick = (symbol: string) => {
     setSelectedSymbol(symbol);
   };
+
+  if (!services) {
+    return (
+      <div className="container mx-auto py-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+            <p>Loading services...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8">

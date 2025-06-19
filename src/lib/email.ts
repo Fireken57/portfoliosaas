@@ -2,7 +2,8 @@ import { Resend } from 'resend';
 import { Alert } from '@/features/trading/types';
 import AlertEmail from '@/emails/AlertEmail';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend only if API key is available
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 export async function sendAlertEmail(
   userEmail: string,
@@ -12,6 +13,11 @@ export async function sendAlertEmail(
   changePercent: number
 ) {
   try {
+    if (!resend) {
+      console.warn('Resend not initialized, skipping email send');
+      return;
+    }
+
     const { data, error } = await resend.emails.send({
       from: 'Trading Alerts <alerts@yourdomain.com>',
       to: userEmail,
@@ -37,6 +43,11 @@ export async function sendAlertEmail(
 }
 
 export async function sendVerificationEmail(email: string, token: string) {
+  if (!resend) {
+    console.warn('Resend not initialized, skipping verification email');
+    return;
+  }
+
   const confirmLink = `${process.env.NEXTAUTH_URL}/auth/verify-email?token=${token}`;
 
   try {
@@ -59,6 +70,11 @@ export async function sendVerificationEmail(email: string, token: string) {
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
+  if (!resend) {
+    console.warn('Resend not initialized, skipping password reset email');
+    return;
+  }
+
   const resetLink = `${process.env.NEXTAUTH_URL}/auth/reset-password/${token}`;
 
   try {
