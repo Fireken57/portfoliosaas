@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,14 +12,14 @@ import { DataTable } from '@/components/ui/data-table';
 import { columns } from './columns';
 import { Chart } from '@/components/trading/Chart';
 import { Plus, Bell } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 // Disable static generation for this page
 export const dynamic = 'force-dynamic';
 
 export default function AlertsPage() {
   const router = useRouter();
-  const [session, setSession] = useState<any>(null);
-  const [sessionLoading, setSessionLoading] = useState(true);
+  const { session, status, isClient } = useAuth();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,18 +37,6 @@ export default function AlertsPage() {
     alertService: any;
     marketService: any;
   } | null>(null);
-
-  // Use useSession only on client side
-  const { data: sessionData, status } = useSession();
-
-  useEffect(() => {
-    if (status === 'loading') {
-      setSessionLoading(true);
-    } else {
-      setSession(sessionData);
-      setSessionLoading(false);
-    }
-  }, [sessionData, status]);
 
   useEffect(() => {
     // Dynamically import services to avoid build issues
@@ -72,7 +59,7 @@ export default function AlertsPage() {
   }, []);
 
   useEffect(() => {
-    if (services && !sessionLoading) {
+    if (services && isClient && status !== 'loading') {
       loadAlerts();
       const unsubscribe = services.alertService.subscribe((alert: Alert) => {
         setAlerts((prev) => [alert, ...prev]);
@@ -83,7 +70,7 @@ export default function AlertsPage() {
         services.alertService.stopCheckingAlerts();
       };
     }
-  }, [services, sessionLoading]);
+  }, [services, isClient, status]);
 
   useEffect(() => {
     if (selectedSymbol && services) {
@@ -166,14 +153,14 @@ export default function AlertsPage() {
     setSelectedSymbol(symbol);
   };
 
-  // Show loading state while session is loading
-  if (sessionLoading) {
+  // Show loading state while not on client or session is loading
+  if (!isClient || status === 'loading') {
     return (
       <div className="container mx-auto py-8">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-            <p>Loading session...</p>
+            <p>Loading...</p>
           </div>
         </div>
       </div>

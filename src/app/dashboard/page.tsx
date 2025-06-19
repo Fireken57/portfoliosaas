@@ -1,36 +1,23 @@
 'use client';
 
-import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
+import { useAuth } from '@/hooks/useAuth'
 
 // Disable static generation for this page
 export const dynamic = 'force-dynamic';
 
 export default function DashboardPage() {
-  const [session, setSession] = useState<any>(null);
-  const [sessionLoading, setSessionLoading] = useState(true);
+  const { session, status, isClient } = useAuth()
   const router = useRouter()
 
-  // Use useSession only on client side
-  const { data: sessionData, status } = useSession()
-
   useEffect(() => {
-    if (status === 'loading') {
-      setSessionLoading(true);
-    } else {
-      setSession(sessionData);
-      setSessionLoading(false);
-    }
-  }, [sessionData, status]);
-
-  useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (isClient && status === 'unauthenticated') {
       router.push('/login')
     }
-  }, [status, router])
+  }, [status, router, isClient])
 
-  if (sessionLoading || status === 'loading') {
+  if (!isClient || status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

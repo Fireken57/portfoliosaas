@@ -1,32 +1,30 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+'use client';
+
+import { useSession } from 'next-auth/react';
+import { useState, useEffect } from 'react';
 
 export function useAuth() {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
+  const [session, setSession] = useState<any>(null);
+  const [status, setStatus] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
+
+  // Only use useSession on client side
+  const { data: sessionData, status: sessionStatus } = useSession();
 
   useEffect(() => {
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      setLoading(false);
-    };
-
-    getSession();
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
+    setIsClient(true);
   }, []);
 
-  const login = (email: string, password: string) =>
-    supabase.auth.signInWithPassword({ email, password });
-  const logout = () => supabase.auth.signOut();
+  useEffect(() => {
+    if (isClient) {
+      setSession(sessionData);
+      setStatus(sessionStatus);
+    }
+  }, [sessionData, sessionStatus, isClient]);
 
-  return { user, loading, login, logout };
+  return {
+    session: isClient ? session : null,
+    status: isClient ? status : 'loading',
+    isClient
+  };
 } 
