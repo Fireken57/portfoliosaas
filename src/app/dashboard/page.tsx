@@ -2,22 +2,23 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import { useAuth } from '@/hooks/useAuth'
+import { useSession } from 'next-auth/react'
+import { ClientOnly } from '@/components/ClientOnly'
 
 // Disable static generation for this page
 export const dynamic = 'force-dynamic';
 
-export default function DashboardPage() {
-  const { session, status, isClient } = useAuth()
+function DashboardContent() {
+  const { data: session, status } = useSession()
   const router = useRouter()
 
   useEffect(() => {
-    if (isClient && status === 'unauthenticated') {
+    if (status === 'unauthenticated') {
       router.push('/login')
     }
-  }, [status, router, isClient])
+  }, [status, router])
 
-  if (!isClient || status === 'loading') {
+  if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -52,5 +53,21 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <ClientOnly
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold">Chargement...</h2>
+          </div>
+        </div>
+      }
+    >
+      <DashboardContent />
+    </ClientOnly>
   )
 } 
