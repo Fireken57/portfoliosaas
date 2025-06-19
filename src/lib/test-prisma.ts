@@ -4,6 +4,11 @@ async function testPrismaOperations() {
   try {
     console.log('🚀 Démarrage des tests Prisma avec Accelerate...')
 
+    if (!prisma) {
+      console.error('❌ Prisma n\'est pas initialisé. Impossible de continuer les tests.');
+      return;
+    }
+
     // Générer un email unique
     const uniqueEmail = `test${Date.now()}@example.com`
     console.log('📧 Email de test:', uniqueEmail)
@@ -63,8 +68,10 @@ async function testPrismaOperations() {
   } catch (error) {
     console.error('❌ Erreur:', error)
   } finally {
-    await prisma.$disconnect()
-    console.log('👋 Connexion à la base de données fermée')
+    if (prisma) {
+      await prisma.$disconnect()
+      console.log('👋 Connexion à la base de données fermée')
+    }
   }
 }
 
