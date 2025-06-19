@@ -4,6 +4,13 @@ import { prisma } from '@/lib/prisma';
 
 export async function POST(req: Request) {
   try {
+    if (!prisma) {
+      return NextResponse.json(
+        { message: 'Service temporairement indisponible' },
+        { status: 503 }
+      );
+    }
+
     const { name, email, password } = await req.json();
 
     if (!name || !email || !password) {

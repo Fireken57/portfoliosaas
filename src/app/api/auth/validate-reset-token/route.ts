@@ -3,6 +3,13 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(req: Request) {
   try {
+    if (!prisma) {
+      return NextResponse.json(
+        { message: 'Service temporairement indisponible' },
+        { status: 503 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const token = searchParams.get('token');
 

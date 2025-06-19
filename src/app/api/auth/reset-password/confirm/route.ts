@@ -4,6 +4,13 @@ import { hash } from 'bcryptjs';
 
 export async function POST(req: Request) {
   try {
+    if (!prisma) {
+      return NextResponse.json(
+        { message: 'Service temporairement indisponible' },
+        { status: 503 }
+      );
+    }
+
     const { token, password } = await req.json();
 
     if (!token || !password) {

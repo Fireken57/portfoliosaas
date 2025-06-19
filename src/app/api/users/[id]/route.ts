@@ -5,6 +5,13 @@ import { prisma } from '@/lib/prisma'
 export async function GET(request: Request, context: any) {
   const id = context?.params?.id;
   try {
+    if (!prisma) {
+      return NextResponse.json(
+        { error: 'Service temporairement indisponible' },
+        { status: 503 }
+      );
+    }
+
     const user = await prisma.user.findUnique({
       where: { id },
       select: {
@@ -37,6 +44,13 @@ export async function GET(request: Request, context: any) {
 export async function PATCH(request: Request, context: any) {
   const id = context?.params?.id;
   try {
+    if (!prisma) {
+      return NextResponse.json(
+        { error: 'Service temporairement indisponible' },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json()
     const { name, email } = body
 
@@ -68,6 +82,13 @@ export async function PATCH(request: Request, context: any) {
 export async function DELETE(request: Request, context: any) {
   const id = context?.params?.id;
   try {
+    if (!prisma) {
+      return NextResponse.json(
+        { error: 'Service temporairement indisponible' },
+        { status: 503 }
+      );
+    }
+
     await prisma.user.delete({
       where: { id },
     })

@@ -1,11 +1,18 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { Prisma } from '@prisma/client'
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 import bcrypt from 'bcryptjs'
 
 // GET /api/users - Récupérer tous les utilisateurs
 export async function GET() {
   try {
+    if (!prisma) {
+      return NextResponse.json(
+        { error: 'Service temporairement indisponible' },
+        { status: 503 }
+      );
+    }
+
     const users = await prisma.user.findMany({
       select: {
         id: true,
@@ -29,6 +36,13 @@ export async function GET() {
 // POST /api/users - Créer un nouvel utilisateur
 export async function POST(request: Request) {
   try {
+    if (!prisma) {
+      return NextResponse.json(
+        { error: 'Service temporairement indisponible' },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json()
     console.log('Données reçues:', body)
     const { name, email, password } = body
@@ -96,7 +110,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Erreur détaillée:', error)
     
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error instanceof PrismaClientKnownRequestError) {
       if (error.code === 'P2002') {
         return NextResponse.json(
           { error: 'Cet email est déjà utilisé' },
