@@ -1,13 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 
-export default function VerifyEmailPage() {
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
+
+function VerifyEmailContent() {
   const [verifying, setVerifying] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -74,5 +77,13 @@ export default function VerifyEmailPage() {
         ) : null}
       </Card>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div>Chargement...</div>}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 } 

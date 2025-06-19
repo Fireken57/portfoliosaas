@@ -9,6 +9,13 @@ const prismaClientSingleton = () => {
   }
   
   try {
+    // Check if DATABASE_URL has the correct format for Prisma Accelerate
+    if (!process.env.DATABASE_URL.startsWith('prisma://') && 
+        !process.env.DATABASE_URL.startsWith('prisma+postgres://')) {
+      console.warn('DATABASE_URL format not compatible with Prisma Accelerate');
+      return null;
+    }
+    
     return new PrismaClient().$extends(withAccelerate())
   } catch (error) {
     console.error('Failed to initialize Prisma client:', error);
