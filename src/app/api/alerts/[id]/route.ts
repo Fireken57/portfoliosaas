@@ -6,6 +6,10 @@ import { prisma } from '@/lib/prisma';
 export async function GET(request: NextRequest, context: any) {
   const id = context?.params?.id;
   try {
+    if (!prisma) {
+      return new NextResponse('Service temporairement indisponible', { status: 503 });
+    }
+
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return new NextResponse('Unauthorized', { status: 401 });
@@ -34,6 +38,10 @@ export async function GET(request: NextRequest, context: any) {
 export async function PATCH(request: NextRequest, context: any) {
   const id = context?.params?.id;
   try {
+    if (!prisma) {
+      return new NextResponse('Service temporairement indisponible', { status: 503 });
+    }
+
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return new NextResponse('Unauthorized', { status: 401 });
@@ -81,6 +89,10 @@ export async function PATCH(request: NextRequest, context: any) {
 export async function DELETE(request: NextRequest, context: any) {
   const id = context?.params?.id;
   try {
+    if (!prisma) {
+      return new NextResponse('Service temporairement indisponible', { status: 503 });
+    }
+
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return new NextResponse('Unauthorized', { status: 401 });

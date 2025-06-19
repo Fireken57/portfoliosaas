@@ -3,7 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { Resend } from 'resend';
 import { randomBytes } from 'crypto';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend only if API key is available
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 export async function POST(req: Request) {
   try {
@@ -17,6 +18,13 @@ export async function POST(req: Request) {
     }
 
     // Vérifier si l'utilisateur existe
+    if (!prisma) {
+      return NextResponse.json(
+        { message: 'Service temporairement indisponible' },
+        { status: 503 }
+      );
+    }
+
     const user = await prisma.user.findUnique({
       where: { email },
     });
@@ -42,22 +50,24 @@ export async function POST(req: Request) {
       },
     });
 
-    // Envoyer l'email
-    const resetUrl = `${process.env.NEXTAUTH_URL}/auth/reset-password/${resetToken}`;
-    
-    await resend.emails.send({
-      from: 'noreply@votredomaine.com',
-      to: email,
-      subject: 'Réinitialisation de votre mot de passe',
-      html: `
-        <h1>Réinitialisation de mot de passe</h1>
-        <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
-        <p>Cliquez sur le lien ci-dessous pour définir un nouveau mot de passe :</p>
-        <a href="${resetUrl}">${resetUrl}</a>
-        <p>Ce lien expirera dans 1 heure.</p>
-        <p>Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet email.</p>
-      `,
-    });
+    // Envoyer l'email seulement si Resend est configuré
+    if (resend) {
+      const resetUrl = `${process.env.NEXTAUTH_URL}/auth/reset-password/${resetToken}`;
+      
+      await resend.emails.send({
+        from: 'noreply@votredomaine.com',
+        to: email,
+        subject: 'Réinitialisation de votre mot de passe',
+        html: `
+          <h1>Réinitialisation de mot de passe</h1>
+          <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
+          <p>Cliquez sur le lien ci-dessous pour définir un nouveau mot de passe :</p>
+          <a href="${resetUrl}">${resetUrl}</a>
+          <p>Ce lien expirera dans 1 heure.</p>
+          <p>Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet email.</p>
+        `,
+      });
+    }
 
     return NextResponse.json(
       { message: 'Si un compte existe avec cet email, vous recevrez un lien de réinitialisation' },

@@ -2,7 +2,18 @@ import { PrismaClient } from '@prisma/client/edge'
 import { withAccelerate } from '@prisma/extension-accelerate'
 
 const prismaClientSingleton = () => {
-  return new PrismaClient().$extends(withAccelerate())
+  // Only initialize if DATABASE_URL is available
+  if (!process.env.DATABASE_URL) {
+    console.warn('DATABASE_URL not found, Prisma client will not be initialized');
+    return null;
+  }
+  
+  try {
+    return new PrismaClient().$extends(withAccelerate())
+  } catch (error) {
+    console.error('Failed to initialize Prisma client:', error);
+    return null;
+  }
 }
 
 declare global {
