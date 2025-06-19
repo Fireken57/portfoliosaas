@@ -8,10 +8,6 @@ const nextConfig = {
     workerThreads: false,
     cpus: 1,
   },
-  // Disable static generation for specific pages
-  async generateStaticParams() {
-    return [];
-  },
 };
 
 module.exports = nextConfig; 

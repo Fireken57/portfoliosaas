@@ -16,6 +16,9 @@ import { columns } from './columns';
 import { Chart } from '@/components/trading/Chart';
 import { Plus, Bell } from 'lucide-react';
 
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
+
 export default function AlertsPage() {
   const router = useRouter();
   const { data: session } = useSession();

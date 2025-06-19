@@ -15,6 +15,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
+// Disable static generation for this page
+export const dynamic = 'force-dynamic';
+
 const marketService = new MarketService();
 
 export default function MarketPage() {
