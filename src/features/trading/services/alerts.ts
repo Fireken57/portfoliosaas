@@ -96,6 +96,11 @@ export class AlertService {
 
   private async checkAlerts(): Promise<void> {
     try {
+      if (!prisma) {
+        console.warn('Prisma not initialized, skipping alert checks');
+        return;
+      }
+
       const alerts = await this.getAlerts();
       const activeAlerts = alerts.filter(alert => !alert.triggered);
 
