@@ -6,6 +6,7 @@ export interface Trade {
   price: number;
   timestamp: Date;
   status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
+  pnl: number;
 }
 
 export interface Position {
@@ -29,13 +30,17 @@ export interface Portfolio {
 }
 
 export interface MarketData {
-  time: string;
-  open: number;
+  symbol: string;
+  timestamp: Date;
+  price: number;
+  change: number;
+  changePercent: number;
+  volume: number;
   high: number;
   low: number;
+  open: number;
   close: number;
-  volume: number;
-  averageVolume?: number;
+  time: string;
 }
 
 export interface Strategy {
@@ -44,8 +49,8 @@ export interface Strategy {
   description: string;
   type: 'TREND' | 'MEAN_REVERSION' | 'BREAKOUT' | 'CUSTOM';
   parameters: Record<string, number>;
-  entryRules: (data: any) => boolean;
-  exitRules: (data: any) => boolean;
+  entryRules: (data: MarketData[]) => boolean;
+  exitRules: (data: MarketData[]) => boolean;
   performance: {
     totalTrades: number;
     winningTrades: number;
