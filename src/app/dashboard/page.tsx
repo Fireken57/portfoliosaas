@@ -2,14 +2,27 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 // Disable static generation for this page
 export const dynamic = 'force-dynamic';
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession()
+  const [session, setSession] = useState<any>(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
   const router = useRouter()
+
+  // Use useSession only on client side
+  const { data: sessionData, status } = useSession()
+
+  useEffect(() => {
+    if (status === 'loading') {
+      setSessionLoading(true);
+    } else {
+      setSession(sessionData);
+      setSessionLoading(false);
+    }
+  }, [sessionData, status]);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -17,7 +30,7 @@ export default function DashboardPage() {
     }
   }, [status, router])
 
-  if (status === 'loading') {
+  if (sessionLoading || status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

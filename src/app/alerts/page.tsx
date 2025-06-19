@@ -19,7 +19,8 @@ export const dynamic = 'force-dynamic';
 
 export default function AlertsPage() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const [session, setSession] = useState<any>(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +38,18 @@ export default function AlertsPage() {
     alertService: any;
     marketService: any;
   } | null>(null);
+
+  // Use useSession only on client side
+  const { data: sessionData, status } = useSession();
+
+  useEffect(() => {
+    if (status === 'loading') {
+      setSessionLoading(true);
+    } else {
+      setSession(sessionData);
+      setSessionLoading(false);
+    }
+  }, [sessionData, status]);
 
   useEffect(() => {
     // Dynamically import services to avoid build issues
@@ -59,7 +72,7 @@ export default function AlertsPage() {
   }, []);
 
   useEffect(() => {
-    if (services) {
+    if (services && !sessionLoading) {
       loadAlerts();
       const unsubscribe = services.alertService.subscribe((alert: Alert) => {
         setAlerts((prev) => [alert, ...prev]);
@@ -70,7 +83,7 @@ export default function AlertsPage() {
         services.alertService.stopCheckingAlerts();
       };
     }
-  }, [services]);
+  }, [services, sessionLoading]);
 
   useEffect(() => {
     if (selectedSymbol && services) {
@@ -153,6 +166,21 @@ export default function AlertsPage() {
     setSelectedSymbol(symbol);
   };
 
+  // Show loading state while session is loading
+  if (sessionLoading) {
+    return (
+      <div className="container mx-auto py-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+            <p>Loading session...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state while services are loading
   if (!services) {
     return (
       <div className="container mx-auto py-8">
